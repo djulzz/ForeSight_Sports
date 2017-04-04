@@ -144,6 +144,9 @@ int main(int argc, const char * argv[]) {
 	std::cout << "YMIN - idx = " << extremas[Y_MIN] << " - value = " << cloud[extremas[Y_MIN]] << std::endl;
 	std::cout << "YMAX - idx = " << extremas[Y_MAX] << " - value = " << cloud[extremas[Y_MAX]] << std::endl;
 
+	Point_2D< float > origin(cloud[extremas[Y_MIN]]);
+	Vector_2D< float > Y_MIN_TO_XMIN();
+	Y_MIN_TO_XMIN = cloud[extremas[X_MIN]] - origin;
 	printf("END TEST INSIDE MAIN\r\n\r\n");
 	size_t nPoints_collected = pts.size();
 
