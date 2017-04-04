@@ -111,6 +111,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="PointCloud.hpp" />
     <ClInclude Include="Point_2D.hpp" />
   </ItemGroup>
   <ItemGroup>

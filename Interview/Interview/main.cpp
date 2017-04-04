@@ -14,6 +14,8 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include "PointCloud.hpp"
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 static const int Error_Invalid_arg_num = -1;
@@ -69,11 +71,20 @@ float distance(float x1, float y1, float x2, float y2)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+void Test(void)
+{
+	PointCloud< float > cloud;
+	Point_2DF pt(1, 1);
+	std::cout << "pt = " << pt << std::endl;
+	cloud.AddPoint(pt);
 
+	printf("END OF TEST\r\n\r\n");
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, const char * argv[]) {
     
+	Test();
 	int nArgs = argc;
 	if (nArgs != 2)
 	{
@@ -122,7 +133,7 @@ int main(int argc, const char * argv[]) {
 	printf("The numbers of points collected is %li\r\n", nPoints_collected );
 	printf("Calculating the number of rows and collumns - H1 - nRows = nColums\r\n");
 
-	unsigned int nRows = sqrtf(static_cast<float>(nPoints_collected));
+	unsigned int nRows = static_cast< int >( sqrtf(static_cast<float>(nPoints_collected)));
 	unsigned int nCols = nRows;
 	if( nRows * nCols != nPoints_collected ) {
 		printf("The number of points collected does not form a grid - Aborting\r\n");
