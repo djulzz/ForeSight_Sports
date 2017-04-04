@@ -1,0 +1,17 @@
+Interview/Debug
+.vs/
+*.docx
+Debug
+*.sln
+*.db
+*.opendb
+Interview.xcodeproj
+Interview/Debug/
+Interview/*.vcxproj
+Interview/*.vcxproj.filters
+
+*.pbxproj
+
+*.pbxproj
+
+*.xcworkspacedata

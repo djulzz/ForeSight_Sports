@@ -14,10 +14,13 @@
 #ifndef POINT_2D_HPP
 #define POINT_2D_HPP
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
     template <typename T> class Point_2D {
         public:
             Point_2D< T >( T x, T y )
@@ -50,10 +53,10 @@ extern "C" {
     };
 
     typedef Point_2D< double > Point_2DD;
-    
-#ifdef __cplusplus
-}
-#endif
+	typedef Point_2D< float > Point_2DF;
+//#ifdef __cplusplus
+//}
+//#endif
 
 #endif /* POINT_2D_HPP */
 
