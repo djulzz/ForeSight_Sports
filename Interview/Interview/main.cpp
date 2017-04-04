@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <limits>
 #include "PointCloud.hpp"
+#include "PointRegularGrid.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +78,10 @@ void Test(void)
 	Point_2DF pt(1, 1);
 	std::cout << "pt = " << pt << std::endl;
 	cloud.AddPoint(pt);
+	size_t nPts = cloud.NumberOfPoints();
 
+	printf("Number of points = %i\r\n", nPts);
+	std::cout << cloud << std::endl;
 	printf("END OF TEST\r\n\r\n");
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +97,7 @@ int main(int argc, const char * argv[]) {
 	}
 	const char* filename =  static_cast< const char* >( argv[1] );
 	FILE* f = fopen(filename, "r");
+	PointRegularGrid< float > cloud;
 	if (NULL == f) {
 		printf("Error opening file provided as input argument - Aborting\r\n");
 		return Error_Opening_File;
@@ -116,6 +121,7 @@ int main(int argc, const char * argv[]) {
 			sscanf(buffer, "%f,%f\r\n", &x, &y);
 			printf("x = %.1f, y= %.1f\r\n", x, y);
 			Point_2DF pt(x, y);
+			cloud.AddPoint(pt);
 			pts.push_back( pt );
 			Xs.push_back(x);
 			Ys.push_back(y);
@@ -124,6 +130,21 @@ int main(int argc, const char * argv[]) {
 	}
 	fclose(f);
 
+	printf("Number of points added to cloud = %i\r\n", cloud.NumberOfPoints());
+	std::cout << cloud << std::endl;
+	Utilities::value_info_t< float > nfo_Xmin = cloud.GetXMin();
+	Utilities::value_info_t< float > nfo_Xmax = cloud.GetXMax();
+	Utilities::value_info_t< float > nfo_Ymin = cloud.GetYMin();
+	Utilities::value_info_t< float > nfo_Ymax = cloud.GetYMax();
+
+	std::vector< size_t > extremas = cloud.GetIndicesOfExtremaPoints();
+
+	std::cout << "XMIN - idx = " << extremas[X_MIN] << " - value = " << cloud[extremas[X_MIN]] << std::endl;
+	std::cout << "XMAX - idx = " << extremas[X_MAX] << " - value = " << cloud[extremas[X_MAX]] << std::endl;
+	std::cout << "YMIN - idx = " << extremas[Y_MIN] << " - value = " << cloud[extremas[Y_MIN]] << std::endl;
+	std::cout << "YMAX - idx = " << extremas[Y_MAX] << " - value = " << cloud[extremas[Y_MAX]] << std::endl;
+
+	printf("END TEST INSIDE MAIN\r\n\r\n");
 	size_t nPoints_collected = pts.size();
 
 	printf("Printing out the the number of points collected...\r\n");

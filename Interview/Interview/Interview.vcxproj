@@ -112,7 +112,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="PointCloud.hpp" />
+    <ClInclude Include="PointRegularGrid.hpp" />
     <ClInclude Include="Point_2D.hpp" />
+    <ClInclude Include="Utilities.hpp" />
+    <ClInclude Include="Vector_2D.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

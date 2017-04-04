@@ -21,6 +21,15 @@
     <ClInclude Include="PointCloud.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Vector_2D.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PointRegularGrid.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
