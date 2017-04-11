@@ -8,12 +8,15 @@
 
 #include <iostream>
 #include <string>
-#include "Point_2D.hpp"
 #include <cstdio>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include <limits>
+
+#include "Point_2D.hpp"
+#include "Vector_2D.hpp"
+
 #include "PointCloud.hpp"
 #include "PointRegularGrid.hpp"
 
@@ -22,11 +25,33 @@
 static const int Error_Invalid_arg_num = -1;
 static const int Error_Opening_File = -2;
 static const int Error_Not_A_Grid = -3;
+static const int Error_Not_Ortho_Base = -4;
 
 static const int Error_None = 0;
 static const int MAX_BUFFER_SIZE = 256;
 
-float* array = 0;
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+template <typename T> Point_2D< T > rotate_point(T cx, T cy, T angle, Point_2D< T >& p)
+{
+	double dangle = (double)angle;
+	T s = (T)sin(dangle);
+	T c = (T)cos(dangle);
+
+	// translate point back to origin:
+	T x = p.X() - cx;
+	T y = p.Y() - cy;
+	p.SetCoords(x, y);
+
+	// rotate point
+	T xnew = p.X() * c - p.Y() * s;
+	T ynew = p.X() * s + p.Y() * c;
+
+	// translate point back:
+	p.SetCoords(xnew + cx, ynew + cy);
+	return p;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 size_t findMin(float& minFound, std::vector< float >& v)
@@ -86,9 +111,11 @@ void Test(void)
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-int main(int argc, const char * argv[]) {
-    
-	Test();
+int main(int argc, const char * argv[])
+{
+	Point_2D< float >::Unit_Test();
+	Vector_2D< float >::Unit_Test();
+
 	int nArgs = argc;
 	if (nArgs != 2)
 	{
@@ -104,9 +131,7 @@ int main(int argc, const char * argv[]) {
 	}
 
 	printf("File <%s> opened successfully - proceeding\r\n", filename );
-	std::vector< Point_2DF > pts;
-	std::vector< float > Xs;
-	std::vector< float > Ys;
+
 
 	char buffer[MAX_BUFFER_SIZE];
 
@@ -120,17 +145,16 @@ int main(int argc, const char * argv[]) {
 		if (strlen(buffer) > 3) {
 			sscanf(buffer, "%f,%f\r\n", &x, &y);
 			printf("x = %.1f, y= %.1f\r\n", x, y);
-			Point_2DF pt(x, y);
+			Point_2D< float > pt(x, y);
 			cloud.AddPoint(pt);
-			pts.push_back( pt );
-			Xs.push_back(x);
-			Ys.push_back(y);
+
 		}
 		//printf("%s\r\n", buffer);
 	}
 	fclose(f);
 
-	printf("Number of points added to cloud = %i\r\n", cloud.NumberOfPoints());
+	size_t nPoints_collected = cloud.NumberOfPoints();
+	printf("Number of points added to cloud = %i\r\n", nPoints_collected );
 	std::cout << cloud << std::endl;
 	Utilities::value_info_t< float > nfo_Xmin = cloud.GetXMin();
 	Utilities::value_info_t< float > nfo_Xmax = cloud.GetXMax();
@@ -144,17 +168,31 @@ int main(int argc, const char * argv[]) {
 	std::cout << "YMIN - idx = " << extremas[Y_MIN] << " - value = " << cloud[extremas[Y_MIN]] << std::endl;
 	std::cout << "YMAX - idx = " << extremas[Y_MAX] << " - value = " << cloud[extremas[Y_MAX]] << std::endl;
 
-	Point_2D< float > origin(cloud[extremas[Y_MIN]]);
-	Vector_2D< float > Y_MIN_TO_XMIN();
-	Y_MIN_TO_XMIN = cloud[extremas[X_MIN]] - origin;
-	printf("END TEST INSIDE MAIN\r\n\r\n");
-	size_t nPoints_collected = pts.size();
+	Point_2D< float > origin(cloud[extremas[Y_MIN]]); // 0
+	Vector_2D< float > Y_MIN_TO_XMIN = cloud[extremas[X_MIN]] - origin; // 0 to 2
+	Vector_2D< float > Y_MIN_TO_XMAX = cloud[extremas[X_MAX]] - origin; // 0 to 6
+	Vector_2D< float > Y_MIN_TO_YMAX = cloud[extremas[Y_MAX]] - origin; // 0 to 8
+	
+	std::cout << "Norm Y_MIN_TO_XMIN = " << Y_MIN_TO_XMIN.Norm() << std::endl; // 0 to 2 --> upward
+	std::cout << "Norm Y_MIN_TO_XMAX = " << Y_MIN_TO_XMAX.Norm() << std::endl; // 0 to 6 --> forward
+	std::cout << "Norm Y_MIN_TO_YMAX = " << Y_MIN_TO_YMAX.Norm() << std::endl; // 0 to 8
 
+	if(!Y_MIN_TO_XMAX.MakesRightAngleWith(Y_MIN_TO_XMIN))
+	{
+		std::cout << "The vectors Y_MIN_TO_XMAX and Y_MIN_TO_XMIN DO NOT FORM an Orthonormed base - Aborting" << std::endl;
+		return Error_Not_Ortho_Base;
+	}
+	std::cout << "We have an orthonormal base - Yeah!" << std::endl;
+	std::cout << "Calculating the angle between [1, 0] and Y_MIN_TO_XMAX..." << std::endl;
+	Vector_2D< float > v_xaxis(1, 0);
+	float angle_grid_in_radians = v_xaxis.AngleWith(Y_MIN_TO_XMAX);
+	float angle_grid_in_degree = angle_grid_in_radians * 180 / Utilities::PI< float >;
+	std::cout << "The grid makes an angle of " << angle_grid_in_degree << " wrt x-axis" << std::endl;
 	printf("Printing out the the number of points collected...\r\n");
 	for (size_t i = 0; i < nPoints_collected; i++) {
-		printf("pts %i/%i --> (%.1f,%.1f)\r\n", i + 1, nPoints_collected, pts[i].X(), pts[i].Y());
+		std::cout << cloud[i] << std::endl;
 	}
-	printf("The numbers of points collected is %li\r\n", nPoints_collected );
+
 	printf("Calculating the number of rows and collumns - H1 - nRows = nColums\r\n");
 
 	unsigned int nRows = static_cast< int >( sqrtf(static_cast<float>(nPoints_collected)));
@@ -164,91 +202,26 @@ int main(int argc, const char * argv[]) {
 		return Error_Not_A_Grid;
 	}
 
+	Point_2D< float > center_rotation = cloud[ extremas[Y_MIN] ];
+	float cx = center_rotation.X();
+	float cy = center_rotation.Y();
+	std::cout << "Displaying rotated points..." << std::endl;
+	for (size_t i = 0; i < nPoints_collected; i++) {
+		Point_2D< float > p = rotate_point< float >(cx, cy, -angle_grid_in_radians, cloud[i]);
+		std::cout << p << std::endl;
+	}
+	
+	
+
 	printf("The grid of points collected has %i Rows and %i Columns\r\n", nRows, nCols);
 
-	float minX, maxX, minY, maxY;
-	
-	size_t index_minX = findMin(minX, Xs);
-	size_t index_maxX = findMax(maxX, Xs);
-	size_t index_minY = findMin(minY, Ys);
-	size_t index_maxY = findMax(maxY, Ys);
-	printf("MinX found for Xs @ IDX = %i - MIN = %.1f\r\n", index_minX, minX);
-	printf("MaxX found for Xs @ IDX = %i - MIN = %.1f\r\n", index_maxX, maxX);
-	printf("MinY found for Ys @ IDX = %i - MIN = %.1f\r\n", index_minY, minY);
-	printf("MaxY found for Ys @ IDX = %i - MIN = %.1f\r\n", index_maxY, maxY);
+
 
 	printf("\r\n\r\n");
-	printf("The extrema of the grid ar located at the following indices with following coordinates\r\n");
-	printf("Extremum 0 - INDEX = %i - (x,y) = (%.1f,%.1f)\r\n", index_minX, Xs[index_minX], Ys[index_minX]);
-	printf("Extremum 1 - INDEX = %i - (x,y) = (%.1f,%.1f)\r\n", index_maxX, Xs[index_maxX], Ys[index_maxX]);
-	printf("Extremum 2 - INDEX = %i - (x,y) = (%.1f,%.1f)\r\n", index_minY, Xs[index_minY], Ys[index_minY]);
-	printf("Extremum 3 - INDEX = %i - (x,y) = (%.1f,%.1f)\r\n", index_maxY, Xs[index_maxY], Ys[index_maxY]);
 
-	float x1, y1, x2, y2, x3, y3, x4, y4;
-
-	x1 = Xs[index_minX];
-	y1 = Ys[index_minX];
-
-	x2 = Xs[index_maxX];
-	y2 = Ys[index_maxX];
-
-	x3 = Xs[index_minY];
-	y3 = Ys[index_minY];
-
-	x4 = Xs[index_maxY];
-	y4 = Ys[index_maxY];
-
-	// we take a reference point for distance:
-	// - index_minX --> index_maxX -- Distance between P1, P2
-	// - index_minX --> index_minY -- Distance between P1, P3
-	// - index_minX --> index_maxY -- Distance between P1, P4
-
-	float d2_index_maxX = distance( x1, y1, x2, y2);
-	float d2_index_minY = distance(x1, y1, x3, y3);
-	float d2_index_maxY = distance(x1, y1, x4, y4);
-	printf("Distance from point index_minX to index_maxX = %f\r\n", d2_index_maxX);
-	printf("Distance from point index_minX to index_minY = %f\r\n", d2_index_minY);
-	printf("Distance from point index_minX to index_maxY = %f\r\n", d2_index_maxY);
-
-	printf("\r\n\r\n");
-	printf("Assumption is made we have a grid, so the two closest distances are consecutive edges\r\n");
-	float d1 = fabsf(d2_index_maxX - d2_index_minY);
-	float d2 = fabsf(d2_index_maxX - d2_index_maxY);
-
-	//// if d1 <= d2, then Distance between { P[index_minX], P[index_maxX] }
-	//// is                      comparable { P[index_minX], P[index_minY] }
-	//if (d1 <= d2)
-	//{
-	//	printf("Points with indices %i %i %i make two consecutive edges\r\n", index_minX, index_maxX, index_minY );
-	//}
-	//// else 
-	//else {
-	//	printf("Points with indices %i %i %i make two consecutive edges\r\n", index_minX, d2_index_maxX, d2_index_maxY);
-	//}
-	//std::vector< size_t > index;
-	//for (size_t i = 0; i<nPoints_collected; i++) {
-	//	index.push_back( i );
-	//}
-
-	//printf("Checking the indices...\r\n");
-	//size_t* ptr_index = &index[0];
-	//for (size_t i = 0; i<index.size(); i++) {
-	//	printf( "%li\r\n", ptr_index[i] );
-	//}
-
-	//array = ( float* )( &Xs[ 0 ] );
-	//printf("Checking the X values...\r\n");
-	//for (size_t i = 0; i<Xs.size(); i++) {
-	//	printf("%f\r\n", array[i]);
-	//}
-
-	//std::qsort( &index[ 0 ], nPoints_collected, nPoints_collected * sizeof( size_t ), cmp);
-	//for (size_t i = 0; i<nPoints_collected; i++) {
-	//	printf("%d\t%d\n", Xs[index[i]], index[i]);
-	//}
 	printf("Program done executing properly - Exiting with success\r\n");
 
 	// cleaning the vector of points
-	pts.clear();
+
     return Error_None;
 }

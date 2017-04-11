@@ -7,6 +7,10 @@
 
 namespace Utilities
 {
+	template <typename T> static const T PI = (T)3.141592653589793238L;
+	template <typename T> static const T PI_OVER_2 = PI<T> / (T)2;
+	template <typename T> static const T EPSILON = (T)(0.0001);
+
 	template <typename T>  class value_info_t
 	{
 		public:
@@ -51,6 +55,7 @@ namespace Utilities
 			/******************************************************************/
 			inline size_t Index() { return m_index; }
 
+
 		protected:
 			T	   m_value;
 			size_t m_index;
@@ -71,6 +76,20 @@ namespace Utilities
 		value_info_t< T > info(max, idx);
 		return info;
 	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+	template <typename T> bool AreValuesAlmostSame(const T v1, const T v2)
+	{
+		bool result = false;
+		double vv1 = (double)v1;
+		double vv2 = (double)v2;
+		double diff = std::abs(vv1 - vv2);
+		if (diff <= (double)EPSILON<T>)
+			result = true;
+		return result;
+	}
+
 
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////
